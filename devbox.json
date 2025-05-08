@@ -1,0 +1,11 @@
+{
+  "packages": [
+    "nodejs@22",
+    "go@latest",
+    "gcc"
+  ],
+  "env": {
+    "GOPATH": "$PWD",
+    "PATH": "$PATH:$PWD/bin",
+  }
+}
