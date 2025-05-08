@@ -6,6 +6,6 @@
   ],
   "env": {
     "GOPATH": "$PWD",
-    "PATH": "$PATH:$PWD/bin",
+    "PATH": "$PATH:$PWD/bin"
   }
 }
