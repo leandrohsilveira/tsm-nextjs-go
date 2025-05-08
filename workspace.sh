@@ -4,6 +4,8 @@ session=$1
 
 [ "$session" = "" ] && "The session name (first argument) is required" && exit 1
 
+[ ! -d "./node_modules" ] && devbox run npm i
+
 tmux new-session -d -s "$session"
 
 tmux rename-window -t 1 'IDE'
