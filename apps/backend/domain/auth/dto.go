@@ -1,4 +1,6 @@
-package tsm_auth_domain
+package auth
+
+import "tsm/domain/user"
 
 type LoginPayload struct {
 	Username string `form:"username" json:"username"`
@@ -11,5 +13,5 @@ type LoginResult struct {
 }
 
 type LoginInfo struct {
-	Data any `json:"data"`
+	Data user.UserData `json:"data"`
 }
