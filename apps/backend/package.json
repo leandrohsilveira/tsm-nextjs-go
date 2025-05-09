@@ -2,6 +2,6 @@
   "name": "backend",
   "private": true,
   "scripts": {
-    "dev": "go run server.go"
+    "dev": "air"
   }
 }

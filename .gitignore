@@ -1,4 +1,5 @@
-.devbox
+/.devbox
 node_modules
-.git
-pkg
+/.git
+/pkg
+/bin

@@ -1,6 +1,7 @@
 package main
 
 import (
+	"net/http"
 	"tsm/domain/auth"
 	"tsm/util"
 
@@ -8,27 +9,27 @@ import (
 )
 
 func main() {
-	e := echo.New()
+	app := echo.New()
 	setup := Setup(
 		auth.Setup("/auth"),
 	)
 
-	if err := setup(e); err != nil {
-		e.Logger.Fatal(err)
+	if err := setup(app); err != nil {
+		app.Logger.Fatal(err)
 	}
 
-	if err := e.Start(":4000"); err != nil {
-		e.Logger.Fatal(err)
+	if err := app.Start(":4000"); err != nil && err != http.ErrServerClosed {
+		app.Logger.Fatal(err)
 	}
 }
 
-func Setup(hooks ...util.SetupRoutes) func(e *echo.Echo) error {
-	return func(e *echo.Echo) error {
+func Setup(hooks ...util.SetupRoutes) func(*echo.Echo) error {
+	return func(app *echo.Echo) error {
 		for _, hook := range hooks {
 			if hook.Err != nil {
 				return hook.Err
 			}
-			hook.Hook(e)
+			hook.Hook(app)
 		}
 		return nil
 	}
