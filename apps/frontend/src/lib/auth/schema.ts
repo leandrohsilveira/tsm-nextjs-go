@@ -1,5 +1,7 @@
 import { z } from "zod"
 import { UserData } from "../user"
+import { err, ok } from "../result"
+import { ValidationError } from "../error"
 
 export interface AuthData {
   data: UserData
@@ -16,3 +18,14 @@ export const AuthLoginPayload = z.object({
 })
 
 export type AuthLoginPayload = z.infer<typeof AuthLoginPayload>
+
+export function parseAuthLoginPayload(form: FormData) {
+  const { success, error, data } = AuthLoginPayload.safeParse({
+    username: form.get('username'),
+    password: form.get('password'),
+  })
+
+  if (!success) return err(ValidationError.fromError(error))
+
+  return ok(data)
+}
