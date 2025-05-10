@@ -24,3 +24,23 @@ body {
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
 }
+
+input {
+
+  &,
+  &:focus,
+  &:focus-within,
+  &:focus-visible {
+    border: none;
+    outline: none;
+  }
+}
+
+button {
+  @apply rounded-md border border-foreground py-2 px-4 cursor-pointer hover:bg-foreground/10;
+
+  &.primary,
+  &[type=submit] {
+    @apply bg-foreground text-background hover:bg-foreground/80 transition-all;
+  }
+}
