@@ -7,6 +7,8 @@ session=$1
 [ ! -d "./.devbox" ] && devbox install
 [ ! -d "./node_modules" ] && devbox run npm i
 
+docker compose up -d --wait
+
 tmux new-session -d -s "$session"
 
 tmux rename-window -t 1 'IDE'

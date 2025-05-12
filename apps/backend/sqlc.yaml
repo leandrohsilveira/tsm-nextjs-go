@@ -1,0 +1,14 @@
+version: "2"
+servers:
+  - engine: postgresql
+    uri: "postgres://app:password@localhost:5432/app?sslmode=disable"
+sql:
+  - engine: postgresql
+    queries: sql/queries
+    schema: sql/migrations
+    gen:
+      go:
+        package: database
+        out: database
+        sql_package: pgx/v5
+

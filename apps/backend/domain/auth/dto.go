@@ -3,8 +3,8 @@ package auth
 import "tsm/domain/user"
 
 type LoginPayload struct {
-	Username string `form:"username" json:"username"`
-	Password string `form:"password" json:"password"`
+	Username string `form:"username" json:"username" validate:"required,email"`
+	Password string `form:"password" json:"password" validate:"required"`
 }
 
 type LoginResult struct {
