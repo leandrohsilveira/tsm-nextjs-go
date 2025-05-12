@@ -9,14 +9,17 @@ import (
 
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/labstack/echo/v4"
+	"github.com/labstack/echo/v4/middleware"
 )
 
 func main() {
 	app := echo.New()
 
+	app.Use(middleware.Logger())
+
 	connString, isSet := os.LookupEnv("DATABASE_URL")
 	if !isSet {
-		connString = "postgresql://app:password@localhost:5432/app?sslmode=disable"
+		connString = "postgres://app:password@localhost:5432/app?sslmode=disable"
 	}
 
 	config, err := pgxpool.ParseConfig(connString)
@@ -28,7 +31,11 @@ func main() {
 	if err != nil {
 		app.Logger.Fatal(err)
 	}
+
 	defer pool.Close()
+	defer app.Logger.Printf("Database disconnected")
+
+	app.Logger.Printf("Database connected %s:%d", config.ConnConfig.Host, config.ConnConfig.Port)
 
 	setup := Setup(
 		auth.Setup("/auth", pool),
