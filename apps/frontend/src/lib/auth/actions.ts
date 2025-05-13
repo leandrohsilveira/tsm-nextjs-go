@@ -2,7 +2,8 @@
 
 import { redirect } from 'next/navigation'
 import { ValidationMessages } from '../error'
-import { login, withAuth } from './api'
+import { login } from './api'
+import { withAuth } from './loaders'
 import { AuthLoginPayload, parseAuthLoginPayload } from './schema'
 
 export async function loginAction(
