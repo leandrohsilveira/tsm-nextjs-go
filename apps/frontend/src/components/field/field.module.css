@@ -1,0 +1,25 @@
+.field {
+
+  &:has(input:required)>label:after {
+    color: var(--color-red-500);
+    content: " *";
+  }
+
+  &>.field_target {
+    &>input {
+
+      &,
+      &:focus,
+      &:focus-within,
+      &:focus-visible {
+        width: 100%;
+        border: none;
+        outline: none;
+      }
+    }
+
+    &:has(input:disabled) {
+      background-color: color-mix(in oklab, var(--foreground) 10%, transparent);
+    }
+  }
+}
