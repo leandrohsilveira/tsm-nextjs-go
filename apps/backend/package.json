@@ -6,6 +6,6 @@
     "migrate": "migrate -source file://sql/migrations -database postgres://app:password@localhost:5432/app?sslmode=disable up",
     "sqlc": "sqlc generate",
     "predev": "npm run migrate && npm run sqlc",
-    "dev": "air"
+    "dev": "air -build.args_bin=--seed"
   }
 }

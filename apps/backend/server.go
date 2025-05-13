@@ -28,6 +28,11 @@ func main() {
 	config := pool.Config().ConnConfig
 	app.Logger.Printf("Database connected %s:%d", config.Host, config.Port)
 
+	err = Seed(context.Background(), pool)
+	if err != nil {
+		app.Logger.Fatal(err)
+	}
+
 	setup := Setup(
 		auth.Setup("/auth", pool),
 	)
