@@ -11,6 +11,8 @@ import (
 	"github.com/labstack/echo/v4"
 )
 
+var IncorrectUsernamePassword = errors.New("Incorrect username or password")
+
 type AuthService struct {
 	user user.UserService
 }
@@ -23,7 +25,7 @@ func (service *AuthService) Login(ctx context.Context, payload LoginPayload) (Lo
 	data, err := service.user.GetByEmailAndPassword(ctx, payload.Username, payload.Password)
 
 	if err == pgx.ErrNoRows {
-		return LoginResult{}, errors.New("Incorrect username or password")
+		return LoginResult{}, IncorrectUsernamePassword
 	}
 
 	// TODO: check password
