@@ -4,6 +4,7 @@ import (
 	"context"
 	"net/http"
 	"os"
+	"tsm/domain"
 	"tsm/domain/auth"
 	"tsm/util"
 
@@ -16,6 +17,7 @@ func main() {
 	app := echo.New()
 
 	app.Use(middleware.Logger())
+	app.Validator = domain.NewValidator()
 
 	connString, isSet := os.LookupEnv("DATABASE_URL")
 	if !isSet {
