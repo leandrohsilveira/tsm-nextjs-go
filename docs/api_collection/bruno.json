@@ -1,0 +1,9 @@
+{
+  "version": "1",
+  "name": "TSM",
+  "type": "collection",
+  "ignore": [
+    "node_modules",
+    ".git"
+  ]
+}

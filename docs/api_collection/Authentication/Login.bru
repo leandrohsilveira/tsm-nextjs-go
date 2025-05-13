@@ -1,0 +1,26 @@
+meta {
+  name: Login
+  type: http
+  seq: 1
+}
+
+post {
+  url: {{base_url}}/auth
+  body: json
+  auth: inherit
+}
+
+body:json {
+  {
+    "username": "{{admin_email}}",
+    "password": "{{admin_password}}"
+  }
+}
+
+vars:post-response {
+  auth_token: res.body.token
+}
+
+assert {
+  res.body.token: isNotEmpty
+}
