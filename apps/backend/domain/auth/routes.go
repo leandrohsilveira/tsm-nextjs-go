@@ -5,6 +5,7 @@ import (
 	"tsm/domain/user"
 	"tsm/util"
 
+	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/labstack/echo/v4"
 )
@@ -36,17 +37,35 @@ func (routes *AuthRoutes) login(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
 	}
 
-	service := user.NewService(routes.pool)
+	service := NewService(user.NewService(routes.pool))
 
-	user, err := service.GetByEmailAndPassword(c.Request().Context(), payload.Username, payload.Password)
+	data, err := service.Login(c.Request().Context(), *payload)
 
 	if err != nil {
 		return err
 	}
 
-	return c.JSON(http.StatusOK, LoginResult{Token: user.ID, RefreshToken: ""})
+	return c.JSON(http.StatusOK, data)
 }
 
 func (routes *AuthRoutes) info(c echo.Context) error {
-	return c.JSON(http.StatusOK, LoginInfo{Data: user.UserData{Name: "Jane Smith", Email: "jane.smith@email.com"}})
+	authorization := c.Request().Header.Get("authorization")
+	if authorization == "" {
+		return echo.ErrUnauthorized
+	}
+
+	// TODO: validate and decode bearer token instead of inferring it as user id
+	userId, err := uuid.Parse(authorization)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, err)
+	}
+	service := user.NewService(routes.pool)
+
+	data, err := service.GetById(c.Request().Context(), userId)
+
+	if err != nil {
+		return err
+	}
+
+	return c.JSON(http.StatusOK, LoginInfo{Data: data})
 }
