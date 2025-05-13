@@ -4,7 +4,7 @@ import (
 	"context"
 	"tsm/database"
 
-	"github.com/jackc/pgx/v5/pgtype"
+	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
@@ -16,7 +16,7 @@ func NewService(pool *pgxpool.Pool) UserService {
 	return UserService{pool}
 }
 
-func (service *UserService) GetById(ctx context.Context, id pgtype.UUID) (UserData, error) {
+func (service *UserService) GetById(ctx context.Context, id uuid.UUID) (UserData, error) {
 	conn, err := service.pool.Acquire(ctx)
 
 	defer conn.Release()
