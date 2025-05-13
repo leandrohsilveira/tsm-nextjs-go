@@ -1,26 +1,27 @@
-"use server"
+'use server'
 
-import { cookies } from "next/headers";
-import { ValidationMessages } from "../error";
-import { login } from "./api";
-import { AuthLoginPayload, parseAuthLoginPayload } from "./schema";
-import { redirect } from "next/navigation";
+import { redirect } from 'next/navigation'
+import { ValidationMessages } from '../error'
+import { login, withAuth } from './api'
+import { AuthLoginPayload, parseAuthLoginPayload } from './schema'
 
-export async function loginAction(_: unknown, form: FormData): Promise<{ message: string | null, errors: ValidationMessages<AuthLoginPayload> }> {
+export async function loginAction(
+  _: unknown,
+  form: FormData,
+): Promise<{
+  message: string | null
+  errors: ValidationMessages<AuthLoginPayload>
+}> {
   const [validationError, data] = parseAuthLoginPayload(form)
-  if (validationError !== null) return { message: null, errors: validationError.errors }
+  if (validationError !== null)
+    return { message: null, errors: validationError.errors }
 
   const [apiError, result] = await login(data)
   if (apiError !== null) return { message: apiError.error.message, errors: {} }
 
-  const cookiesStorage = await cookies()
+  const [, setToken] = await withAuth()
 
-  cookiesStorage.set('session', result.token, {
-    sameSite: 'lax',
-    path: '/',
-    secure: true,
-    httpOnly: true,
-  })
+  setToken(result)
 
   redirect('/')
 }

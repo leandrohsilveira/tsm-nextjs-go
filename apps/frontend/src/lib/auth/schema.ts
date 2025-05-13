@@ -1,7 +1,7 @@
-import { z } from "zod"
-import { UserData } from "../user"
-import { err, ok } from "../result"
-import { ValidationError } from "../error"
+import { z } from 'zod'
+import { UserData } from '../user'
+import { err, ok } from '../result'
+import { ValidationError } from '../error'
 
 export interface AuthData {
   data: UserData

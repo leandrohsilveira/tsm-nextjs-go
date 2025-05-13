@@ -1,13 +1,11 @@
 .field {
-
-  &:has(input:required)>label:after {
+  &:has(input:required) > label:after {
     color: var(--color-red-500);
-    content: " *";
+    content: ' *';
   }
 
-  &>.field_target {
-    &>input {
-
+  & > .field_target {
+    & > input {
       &,
       &:focus,
       &:focus-within,

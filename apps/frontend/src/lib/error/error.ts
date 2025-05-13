@@ -1,4 +1,4 @@
-import { ZodError } from "zod";
+import { ZodError } from 'zod'
 
 interface StandardError<T extends string = string> {
   readonly kind: T
@@ -15,9 +15,10 @@ export type ValidationMessages<E> = {
 const VALIDATION_ERROR = 'VALIDATION_ERROR' as const
 const API_RESPONSE_ERROR = 'API_RESPONSE_ERROR' as const
 
-export class ValidationError<E> implements StandardError<typeof VALIDATION_ERROR> {
-  constructor(public errors: ValidationMessages<E>) {
-  }
+export class ValidationError<E>
+  implements StandardError<typeof VALIDATION_ERROR>
+{
+  constructor(public errors: ValidationMessages<E>) {}
 
   public readonly kind = VALIDATION_ERROR
 
@@ -27,9 +28,10 @@ export class ValidationError<E> implements StandardError<typeof VALIDATION_ERROR
   }
 }
 
-export class ApiResponseError implements StandardError<typeof API_RESPONSE_ERROR> {
-  constructor(public error: StandardApiErrorData) {
-  }
+export class ApiResponseError
+  implements StandardError<typeof API_RESPONSE_ERROR>
+{
+  constructor(public error: StandardApiErrorData) {}
 
   public readonly kind = API_RESPONSE_ERROR
 
@@ -38,12 +40,12 @@ export class ApiResponseError implements StandardError<typeof API_RESPONSE_ERROR
       return new ApiResponseError(await response.json())
     }
     return new ApiResponseError({
-      message: await response.text()
+      message: await response.text(),
     })
   }
 }
 
 export const StandardErrors = {
   VALIDATION_ERROR: VALIDATION_ERROR,
-  API_RESPONSE_ERROR: API_RESPONSE_ERROR
+  API_RESPONSE_ERROR: API_RESPONSE_ERROR,
 }

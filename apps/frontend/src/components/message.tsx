@@ -1,4 +1,4 @@
-import clsx from "clsx"
+import clsx from 'clsx'
 
 type Props = Readonly<{
   text: string | null | undefined
@@ -11,13 +11,10 @@ export function Message({ text, kind }: Props) {
     <div className="fixed top-2 left-0 right-0 flex justify-center items-center">
       <div
         role="alert"
-        className={clsx(
-          "p-2 rounded-lg text-white",
-          {
-            "bg-green-500": kind === "success",
-            "bg-red-500": kind === "error"
-          }
-        )}
+        className={clsx('p-2 rounded-lg text-white', {
+          'bg-green-500': kind === 'success',
+          'bg-red-500': kind === 'error',
+        })}
       >
         {text}
       </div>

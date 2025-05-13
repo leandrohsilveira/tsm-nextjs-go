@@ -1,10 +1,19 @@
+'use server'
 
-type Props = Readonly<React.PropsWithChildren>
+import type { PropsWithChildren } from 'react'
+import { PageHeader } from './page-header'
 
-export function PageLayout({ children }: Props) {
+type Props = Readonly<PropsWithChildren>
+
+export async function PageLayout({ children }: Props) {
   return (
-    <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
-      <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">{children}</main>
-    </div>
+    <>
+      <PageHeader />
+      <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
+        <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
+          {children}
+        </main>
+      </div>
+    </>
   )
 }
