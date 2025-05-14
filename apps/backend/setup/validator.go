@@ -1,4 +1,4 @@
-package domain
+package setup
 
 import (
 	"net/http"
@@ -13,6 +13,10 @@ type GoPlaygroundValidator struct {
 
 func NewValidator() *GoPlaygroundValidator {
 	return &GoPlaygroundValidator{validator: validator.New()}
+}
+
+func SetupValidator(app *echo.Echo) {
+	app.Validator = NewValidator()
 }
 
 func (cv *GoPlaygroundValidator) Validate(i any) error {

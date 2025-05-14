@@ -2,21 +2,22 @@ package main
 
 import (
 	"context"
-	"fmt"
 	"os"
 	"tsm/database"
+	"tsm/domain"
+	"tsm/domain/user"
 
-	"github.com/jackc/pgx/v5"
-	"github.com/jackc/pgx/v5/pgtype"
-	"github.com/jackc/pgx/v5/pgxpool"
+	"github.com/labstack/echo/v4"
 )
 
-func Seed(ctx context.Context, pool *pgxpool.Pool) error {
+func Seed(ctx context.Context, logger echo.Logger, pool *domain.DatabasePool) error {
 	activate := ShouldSeed()
 
 	if !activate {
 		return nil
 	}
+
+	logger.Infof("Seeding database...")
 
 	username, isUsernameSet := os.LookupEnv("ADMIN_USERNAME")
 	if !isUsernameSet {
@@ -28,35 +29,28 @@ func Seed(ctx context.Context, pool *pgxpool.Pool) error {
 		password = "123456"
 	}
 
-	conn, err := pool.Acquire(ctx)
+	service := user.NewService(pool)
+
+	data, err := service.GetByEmail(ctx, username)
+
 	if err != nil {
 		return err
 	}
 
-	defer conn.Release()
-
-	queries := database.New(conn)
-
-	_, err = queries.GetUserByEmail(ctx, username)
-
-	if err != nil && err != pgx.ErrNoRows {
-		return err
-	}
-
-	if err == nil {
-		fmt.Printf("Admin user %s already exists, aborting...", username)
+	if data != nil {
+		logger.Infof("Admin user %s already exists (ID %s), seed will be aborted", username, data.ID)
 		return nil
 	}
 
-	_, err = queries.CreateUser(ctx, database.CreateUserParams{
+	data, err = service.Create(ctx, user.UserCreateData{
 		Name:     username,
 		Email:    username,
-		Password: pgtype.Text{String: password},
+		Password: password,
 		Role:     database.UserRoleAdminUser,
 	})
 
 	if err == nil {
-		fmt.Printf("Admin user %s created", username)
+		logger.Infof("Admin user %s created with ID: $s", username, data.ID)
 	}
 
 	return err

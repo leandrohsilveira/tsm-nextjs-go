@@ -2,38 +2,75 @@ package user
 
 import (
 	"context"
+	"errors"
+	"tsm/crypto"
 	"tsm/database"
+	"tsm/domain"
 
 	"github.com/google/uuid"
-	"github.com/jackc/pgx/v5/pgxpool"
+	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgtype"
 )
 
+var IncorrectUsernamePassword = errors.New("Incorrect username or password")
+
 type UserService struct {
-	pool *pgxpool.Pool
+	pool *domain.DatabasePool
 }
 
-func NewService(pool *pgxpool.Pool) UserService {
+func NewService(pool *domain.DatabasePool) UserService {
 	return UserService{pool}
 }
 
-func (service *UserService) GetById(ctx context.Context, id uuid.UUID) (UserData, error) {
-	conn, err := service.pool.Acquire(ctx)
-
-	defer conn.Release()
+func (service *UserService) Create(ctx context.Context, payload UserCreateData) (*UserData, error) {
+	queries, release, err := service.pool.Acquire(ctx)
+	defer release()
 
 	if err != nil {
-		return UserData{}, err
+		return nil, err
 	}
 
-	queries := database.New(conn)
+	password, err := crypto.HashPassword(payload.Password)
+
+	if err != nil {
+		return nil, err
+	}
+
+	result, err := queries.CreateUser(ctx, database.CreateUserParams{
+		Name:     payload.Name,
+		Email:    payload.Email,
+		Role:     payload.Role,
+		Password: pgtype.Text{String: password},
+	})
+
+	if err != nil {
+		return nil, err
+	}
+
+	data := &UserData{
+		ID:    result.ID.String(),
+		Name:  result.Name,
+		Email: result.Email,
+	}
+
+	return data, nil
+}
+
+func (service *UserService) GetById(ctx context.Context, id uuid.UUID) (*UserData, error) {
+	queries, release, err := service.pool.Acquire(ctx)
+	defer release()
+
+	if err != nil {
+		return nil, err
+	}
 
 	user, err := queries.GetUserById(ctx, id)
 
 	if err != nil {
-		return UserData{}, err
+		return nil, err
 	}
 
-	data := UserData{
+	data := &UserData{
 		ID:    user.ID.String(),
 		Email: user.Email,
 		Name:  user.Name,
@@ -42,31 +79,62 @@ func (service *UserService) GetById(ctx context.Context, id uuid.UUID) (UserData
 	return data, nil
 }
 
-func (service *UserService) GetByEmailAndPassword(ctx context.Context, email string, password string) (UserData, error) {
-	conn, err := service.pool.Acquire(ctx)
+func (service *UserService) GetByEmail(ctx context.Context, email string) (*UserData, error) {
+	queries, release, err := service.pool.Acquire(ctx)
+	defer release()
 
-	defer conn.Release()
-
-	if err != nil {
-		return UserData{}, err
+	if err == pgx.ErrNoRows {
+		return nil, nil
 	}
 
-	queries := database.New(conn)
+	if err != nil {
+		return nil, err
+	}
 
 	user, err := queries.GetUserByEmail(ctx, email)
 
 	if err != nil {
-		return UserData{}, err
+		return nil, err
 	}
 
-	// TODO: decode and check user password
-
-	data := UserData{
+	data := &UserData{
 		ID:    user.ID.String(),
 		Email: user.Email,
 		Name:  user.Name,
 	}
 
 	return data, nil
+}
 
+func (service *UserService) GetByEmailAndPassword(ctx context.Context, email string, password string) (*UserData, error) {
+	queries, release, err := service.pool.Acquire(ctx)
+	defer release()
+
+	if err != nil {
+		return nil, err
+	}
+
+	user, err := queries.GetUserByEmail(ctx, email)
+
+	if err == pgx.ErrNoRows {
+		return nil, IncorrectUsernamePassword
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	validPassword := crypto.VerifyPassword(password, user.Password.String)
+
+	if !validPassword {
+		return nil, IncorrectUsernamePassword
+	}
+
+	data := &UserData{
+		ID:    user.ID.String(),
+		Email: user.Email,
+		Name:  user.Name,
+	}
+
+	return data, nil
 }

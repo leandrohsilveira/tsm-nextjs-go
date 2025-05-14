@@ -5,39 +5,35 @@ import (
 	"net/http"
 	"tsm/domain"
 	"tsm/domain/auth"
+	"tsm/setup"
 	"tsm/util"
 
 	"github.com/labstack/echo/v4"
-	"github.com/labstack/echo/v4/middleware"
 )
 
 func main() {
 	app := echo.New()
 
-	app.Use(middleware.Logger())
-	app.Validator = domain.NewValidator()
+	setup.SetupLogger(app)
+	setup.SetupValidator(app)
 
-	pool, err := domain.NewDatabasePool(context.Background())
+	pool, err := domain.NewDatabasePool(context.Background(), app.Logger)
+
 	if err != nil {
 		app.Logger.Fatal(err)
 	}
 
 	defer pool.Close()
-	defer app.Logger.Printf("Database disconnected")
 
-	config := pool.Config().ConnConfig
-	app.Logger.Printf("Database connected %s:%d", config.Host, config.Port)
-
-	err = Seed(context.Background(), pool)
-	if err != nil {
+	if err = Seed(context.Background(), app.Logger, pool); err != nil {
 		app.Logger.Fatal(err)
 	}
 
-	setup := Setup(
+	setupRoutes := Routes(
 		auth.Setup("/auth", pool),
 	)
 
-	if err := setup(app); err != nil {
+	if err := setupRoutes(app); err != nil {
 		app.Logger.Fatal(err)
 	}
 
@@ -46,7 +42,7 @@ func main() {
 	}
 }
 
-func Setup(hooks ...util.SetupRoutes) func(*echo.Echo) error {
+func Routes(hooks ...util.SetupRoutes) func(*echo.Echo) error {
 	return func(app *echo.Echo) error {
 		for _, hook := range hooks {
 			if hook.Err != nil {

@@ -2,19 +2,19 @@ package auth
 
 import (
 	"net/http"
+	"tsm/domain"
 	"tsm/domain/user"
 	"tsm/util"
 
 	"github.com/google/uuid"
-	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/labstack/echo/v4"
 )
 
 type AuthRoutes struct {
-	pool *pgxpool.Pool
+	pool *domain.DatabasePool
 }
 
-func Setup(path string, pool *pgxpool.Pool) util.SetupRoutes {
+func Setup(path string, pool *domain.DatabasePool) util.SetupRoutes {
 
 	routes := AuthRoutes{pool}
 
@@ -41,7 +41,7 @@ func (routes *AuthRoutes) login(c echo.Context) error {
 
 	data, err := service.Login(c.Request().Context(), *payload)
 
-	if err == IncorrectUsernamePassword {
+	if err == user.IncorrectUsernamePassword {
 		return echo.NewHTTPError(http.StatusForbidden, err)
 	}
 
@@ -63,6 +63,7 @@ func (routes *AuthRoutes) info(c echo.Context) error {
 	if err != nil {
 		return echo.NewHTTPError(http.StatusBadRequest, err)
 	}
+
 	service := user.NewService(routes.pool)
 
 	data, err := service.GetById(c.Request().Context(), userId)
@@ -71,5 +72,5 @@ func (routes *AuthRoutes) info(c echo.Context) error {
 		return err
 	}
 
-	return c.JSON(http.StatusOK, LoginInfo{Data: data})
+	return c.JSON(http.StatusOK, LoginInfo{Data: *data})
 }
