@@ -10,7 +10,10 @@ func HashPassword(password string) (string, error) {
 	return string(result), nil
 }
 
-func VerifyPassword(password, hash string) bool {
+func VerifyPassword(password, hash string) (bool, error) {
 	err := bcrypt.CompareHashAndPassword([]byte(hash), []byte(password))
-	return err == nil
+	if err != nil && err != bcrypt.ErrMismatchedHashAndPassword {
+		return false, err
+	}
+	return err == nil, nil
 }

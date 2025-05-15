@@ -126,9 +126,11 @@ func (service *UserService) GetByEmailAndPassword(ctx context.Context, email str
 		return nil, err
 	}
 
-	validPassword := crypto.VerifyPassword(password, user.Password.String)
-
-	if !validPassword {
+	matched, err := crypto.VerifyPassword(password, user.Password.String)
+	if err != nil {
+		return nil, err
+	}
+	if !matched {
 		return nil, ErrIncorrectUsernamePassword
 	}
 
