@@ -6,7 +6,6 @@ import (
 	"tsm/domain"
 	"tsm/domain/auth"
 	"tsm/setup"
-	"tsm/util"
 
 	"github.com/labstack/echo/v4"
 )
@@ -29,8 +28,8 @@ func main() {
 		app.Logger.Fatal(err)
 	}
 
-	setupRoutes := Routes(
-		auth.Setup("/auth", pool),
+	setupRoutes := setup.Routes(
+		auth.Routes("/auth", pool),
 	)
 
 	if err := setupRoutes(app); err != nil {
@@ -39,17 +38,5 @@ func main() {
 
 	if err := app.Start(":4000"); err != nil && err != http.ErrServerClosed {
 		app.Logger.Fatal(err)
-	}
-}
-
-func Routes(hooks ...util.SetupRoutes) func(*echo.Echo) error {
-	return func(app *echo.Echo) error {
-		for _, hook := range hooks {
-			if hook.Err != nil {
-				return hook.Err
-			}
-			hook.Hook(app)
-		}
-		return nil
 	}
 }

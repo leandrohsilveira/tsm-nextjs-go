@@ -10,7 +10,7 @@ func SetupLogger(app *echo.Echo) {
 	app.Use(middleware.RequestID())
 	app.Use(middleware.LoggerWithConfig(middleware.LoggerConfig{
 		Format: "${time_rfc3339_nano} [MIDDLEWARE] (${id}) " +
-			"- ${method} ${uri} -> HTTP ${status} (${latency_human}) ${error}",
+			"- ${method} ${uri} -> HTTP ${status} (${latency_human}) ${error}\n",
 	}))
 
 	app.Logger.SetHeader("${time_rfc3339_nano} [${level}] (${id}) ${short_file}:${line} =>")

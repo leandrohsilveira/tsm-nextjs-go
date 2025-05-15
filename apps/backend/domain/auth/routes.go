@@ -4,7 +4,7 @@ import (
 	"net/http"
 	"tsm/domain"
 	"tsm/domain/user"
-	"tsm/util"
+	"tsm/setup"
 
 	"github.com/google/uuid"
 	"github.com/labstack/echo/v4"
@@ -14,11 +14,11 @@ type AuthRoutes struct {
 	pool *domain.DatabasePool
 }
 
-func Setup(path string, pool *domain.DatabasePool) util.SetupRoutes {
+func Routes(path string, pool *domain.DatabasePool) setup.SetupRoutesResult {
 
 	routes := AuthRoutes{pool}
 
-	return util.Setup(
+	return setup.SetupRoutes(
 		func(e *echo.Echo) {
 			e.POST(path, routes.login)
 			e.GET(path, routes.info)
