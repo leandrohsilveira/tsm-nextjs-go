@@ -21,18 +21,19 @@ func NewService(pool *domain.DatabasePool) UserService {
 }
 
 func (service *UserService) Create(ctx context.Context, payload UserCreateData) (*UserData, error) {
-	queries, release, err := service.pool.Acquire(ctx)
-	defer release()
-
-	if err != nil {
-		return nil, err
-	}
-
 	password, err := crypto.HashPassword(payload.Password)
 
 	if err != nil {
 		return nil, err
 	}
+
+	queries, release, err := service.pool.Acquire(ctx)
+
+	if err != nil {
+		return nil, err
+	}
+
+	defer release()
 
 	result, err := queries.CreateUser(ctx, database.CreateUserParams{
 		Name:     payload.Name,
@@ -56,11 +57,12 @@ func (service *UserService) Create(ctx context.Context, payload UserCreateData) 
 
 func (service *UserService) GetById(ctx context.Context, id uuid.UUID) (*UserData, error) {
 	queries, release, err := service.pool.Acquire(ctx)
-	defer release()
 
 	if err != nil {
 		return nil, err
 	}
+
+	defer release()
 
 	user, err := queries.GetUserById(ctx, id)
 
@@ -79,11 +81,12 @@ func (service *UserService) GetById(ctx context.Context, id uuid.UUID) (*UserDat
 
 func (service *UserService) GetByEmail(ctx context.Context, email string) (*UserData, error) {
 	queries, release, err := service.pool.Acquire(ctx)
-	defer release()
 
 	if err != nil {
 		return nil, err
 	}
+
+	defer release()
 
 	user, err := queries.GetUserByEmail(ctx, email)
 
