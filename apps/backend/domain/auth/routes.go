@@ -41,7 +41,7 @@ func (routes *AuthRoutes) login(c echo.Context) error {
 
 	data, err := service.Login(c.Request().Context(), *payload)
 
-	if err == user.IncorrectUsernamePassword {
+	if err == user.ErrIncorrectUsernamePassword {
 		return echo.NewHTTPError(http.StatusForbidden, err)
 	}
 

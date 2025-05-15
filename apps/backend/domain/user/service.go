@@ -12,7 +12,7 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
-var IncorrectUsernamePassword = errors.New("Incorrect username or password")
+var ErrIncorrectUsernamePassword = errors.New("Incorrect username or password")
 
 type UserService struct {
 	pool *domain.DatabasePool
@@ -117,7 +117,7 @@ func (service *UserService) GetByEmailAndPassword(ctx context.Context, email str
 	user, err := queries.GetUserByEmail(ctx, email)
 
 	if err == pgx.ErrNoRows {
-		return nil, IncorrectUsernamePassword
+		return nil, ErrIncorrectUsernamePassword
 	}
 
 	if err != nil {
@@ -127,7 +127,7 @@ func (service *UserService) GetByEmailAndPassword(ctx context.Context, email str
 	validPassword := crypto.VerifyPassword(password, user.Password.String)
 
 	if !validPassword {
-		return nil, IncorrectUsernamePassword
+		return nil, ErrIncorrectUsernamePassword
 	}
 
 	data := &UserData{
