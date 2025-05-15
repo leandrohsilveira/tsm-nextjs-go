@@ -40,7 +40,7 @@ func NewDatabasePool(ctx context.Context, logger echo.Logger) (*DatabasePool, er
 }
 
 func (db *DatabasePool) Text(text string) pgtype.Text {
-	return pgtype.Text{String: text}
+	return pgtype.Text{String: text, Valid: true}
 }
 
 func (db *DatabasePool) Acquire(ctx context.Context) (*database.Queries, func(), error) {
