@@ -50,7 +50,7 @@ func Seed(ctx context.Context, logger echo.Logger, pool *domain.DatabasePool) er
 	})
 
 	if err == nil {
-		logger.Infof("Admin user %s created with ID: $s", username, data.ID)
+		logger.Infof("Admin user %s created with ID: %s", username, data.ID)
 	}
 
 	return err
