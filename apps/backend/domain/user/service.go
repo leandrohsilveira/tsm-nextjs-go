@@ -8,8 +8,6 @@ import (
 	"tsm/domain"
 
 	"github.com/google/uuid"
-	"github.com/jackc/pgx/v5"
-	"github.com/jackc/pgx/v5/pgtype"
 )
 
 var ErrIncorrectUsernamePassword = errors.New("Incorrect username or password")
@@ -40,7 +38,7 @@ func (service *UserService) Create(ctx context.Context, payload UserCreateData) 
 		Name:     payload.Name,
 		Email:    payload.Email,
 		Role:     payload.Role,
-		Password: pgtype.Text{String: password},
+		Password: service.pool.Text(password),
 	})
 
 	if err != nil {
@@ -83,15 +81,15 @@ func (service *UserService) GetByEmail(ctx context.Context, email string) (*User
 	queries, release, err := service.pool.Acquire(ctx)
 	defer release()
 
-	if err == pgx.ErrNoRows {
-		return nil, nil
-	}
-
 	if err != nil {
 		return nil, err
 	}
 
 	user, err := queries.GetUserByEmail(ctx, email)
+
+	if err == domain.ErrNoRows {
+		return nil, nil
+	}
 
 	if err != nil {
 		return nil, err
@@ -116,7 +114,7 @@ func (service *UserService) GetByEmailAndPassword(ctx context.Context, email str
 
 	user, err := queries.GetUserByEmail(ctx, email)
 
-	if err == pgx.ErrNoRows {
+	if err == domain.ErrNoRows {
 		return nil, ErrIncorrectUsernamePassword
 	}
 

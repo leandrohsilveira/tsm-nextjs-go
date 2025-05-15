@@ -5,6 +5,8 @@ import (
 	"os"
 	"tsm/database"
 
+	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgtype"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/labstack/echo/v4"
 )
@@ -13,6 +15,8 @@ type DatabasePool struct {
 	pool   *pgxpool.Pool
 	logger echo.Logger
 }
+
+var ErrNoRows = pgx.ErrNoRows
 
 func NewDatabasePool(ctx context.Context, logger echo.Logger) (*DatabasePool, error) {
 	connString, isSet := os.LookupEnv("DATABASE_URL")
@@ -33,6 +37,10 @@ func NewDatabasePool(ctx context.Context, logger echo.Logger) (*DatabasePool, er
 	logger.Infof("Database connected %s:%d", config.ConnConfig.Host, config.ConnConfig.Port)
 
 	return &DatabasePool{pool, logger}, nil
+}
+
+func (db *DatabasePool) Text(text string) pgtype.Text {
+	return pgtype.Text{String: text}
 }
 
 func (db *DatabasePool) Acquire(ctx context.Context) (*database.Queries, func(), error) {
