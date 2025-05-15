@@ -109,11 +109,12 @@ func (service *UserService) GetByEmail(ctx context.Context, email string) (*User
 
 func (service *UserService) GetByEmailAndPassword(ctx context.Context, email string, password string) (*UserData, error) {
 	queries, release, err := service.pool.Acquire(ctx)
-	defer release()
 
 	if err != nil {
 		return nil, err
 	}
+
+	defer release()
 
 	user, err := queries.GetUserByEmail(ctx, email)
 
