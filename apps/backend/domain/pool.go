@@ -11,14 +11,21 @@ import (
 	"github.com/labstack/echo/v4"
 )
 
-type DatabasePool struct {
+type DatabasePool interface {
+	Text(string) pgtype.Text
+	Acquire(context.Context) (*database.Queries, func(), error)
+	WithQueries(context.Context, func(*database.Queries) error) error
+	Close()
+}
+
+type databasePool struct {
 	pool   *pgxpool.Pool
 	logger echo.Logger
 }
 
 var ErrNoRows = pgx.ErrNoRows
 
-func NewDatabasePool(ctx context.Context, logger echo.Logger) (*DatabasePool, error) {
+func NewDatabasePool(ctx context.Context, logger echo.Logger) (DatabasePool, error) {
 	connString, isSet := os.LookupEnv("DATABASE_URL")
 	if !isSet {
 		connString = "postgres://app:password@localhost:5432/app?sslmode=disable"
@@ -36,14 +43,14 @@ func NewDatabasePool(ctx context.Context, logger echo.Logger) (*DatabasePool, er
 
 	logger.Infof("Database connected %s:%d", config.ConnConfig.Host, config.ConnConfig.Port)
 
-	return &DatabasePool{pool, logger}, nil
+	return &databasePool{pool, logger}, nil
 }
 
-func (db *DatabasePool) Text(text string) pgtype.Text {
+func (db *databasePool) Text(text string) pgtype.Text {
 	return pgtype.Text{String: text, Valid: true}
 }
 
-func (db *DatabasePool) Acquire(ctx context.Context) (*database.Queries, func(), error) {
+func (db *databasePool) Acquire(ctx context.Context) (*database.Queries, func(), error) {
 	conn, err := db.pool.Acquire(ctx)
 
 	if err != nil {
@@ -55,14 +62,14 @@ func (db *DatabasePool) Acquire(ctx context.Context) (*database.Queries, func(),
 	return queries, conn.Release, nil
 }
 
-func (db *DatabasePool) WithQueries(ctx context.Context, fn func(*database.Queries) error) error {
+func (db *databasePool) WithQueries(ctx context.Context, fn func(*database.Queries) error) error {
 	return db.pool.AcquireFunc(ctx, func(c *pgxpool.Conn) error {
 		queries := database.New(c)
 		return fn(queries)
 	})
 }
 
-func (db *DatabasePool) Close() {
+func (db *databasePool) Close() {
 	db.pool.Close()
 	db.logger.Infof("Database disconnected")
 }

@@ -9,15 +9,20 @@ import (
 	"github.com/labstack/echo/v4"
 )
 
-type AuthService struct {
+type AuthService interface {
+	Login(context.Context, LoginPayload) (*LoginResult, error)
+	GetCurrentUser(http.Request) (*user.UserData, error)
+}
+
+type authService struct {
 	user user.UserService
 }
 
 func NewService(userService user.UserService) AuthService {
-	return AuthService{user: userService}
+	return &authService{user: userService}
 }
 
-func (service *AuthService) Login(ctx context.Context, payload LoginPayload) (*LoginResult, error) {
+func (service *authService) Login(ctx context.Context, payload LoginPayload) (*LoginResult, error) {
 	data, err := service.user.GetByEmailAndPassword(ctx, payload.Username, payload.Password)
 
 	if err != nil {
@@ -27,7 +32,7 @@ func (service *AuthService) Login(ctx context.Context, payload LoginPayload) (*L
 	return &LoginResult{Token: data.ID, RefreshToken: ""}, nil
 }
 
-func (service *AuthService) GetCurrentUser(req http.Request) (*user.UserData, error) {
+func (service *authService) GetCurrentUser(req http.Request) (*user.UserData, error) {
 	authorization := req.Header.Get("authorization")
 
 	if authorization == "" {

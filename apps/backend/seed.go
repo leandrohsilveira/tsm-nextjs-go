@@ -10,7 +10,7 @@ import (
 	"github.com/labstack/echo/v4"
 )
 
-func Seed(ctx context.Context, logger echo.Logger, pool *domain.DatabasePool) error {
+func Seed(ctx context.Context, logger echo.Logger, pool domain.DatabasePool) error {
 	activate := ShouldSeed()
 
 	if !activate {

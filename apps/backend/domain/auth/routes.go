@@ -11,10 +11,10 @@ import (
 )
 
 type AuthRoutes struct {
-	pool *domain.DatabasePool
+	pool domain.DatabasePool
 }
 
-func Routes(path string, pool *domain.DatabasePool) setup.SetupRoutesResult {
+func Routes(path string, pool domain.DatabasePool) setup.SetupRoutesResult {
 
 	routes := AuthRoutes{pool}
 

@@ -12,15 +12,22 @@ import (
 
 var ErrIncorrectUsernamePassword = errors.New("Incorrect username or password")
 
-type UserService struct {
-	pool *domain.DatabasePool
+type UserService interface {
+	Create(context.Context, UserCreateData) (*UserData, error)
+	GetById(context.Context, uuid.UUID) (*UserData, error)
+	GetByEmail(context.Context, string) (*UserData, error)
+	GetByEmailAndPassword(context.Context, string, string) (*UserData, error)
 }
 
-func NewService(pool *domain.DatabasePool) UserService {
-	return UserService{pool}
+type userService struct {
+	pool domain.DatabasePool
 }
 
-func (service *UserService) Create(ctx context.Context, payload UserCreateData) (*UserData, error) {
+func NewService(pool domain.DatabasePool) UserService {
+	return &userService{pool}
+}
+
+func (service *userService) Create(ctx context.Context, payload UserCreateData) (*UserData, error) {
 	password, err := crypto.HashPassword(payload.Password)
 	if err != nil {
 		return nil, err
@@ -51,7 +58,7 @@ func (service *UserService) Create(ctx context.Context, payload UserCreateData) 
 	return data, nil
 }
 
-func (service *UserService) GetById(ctx context.Context, id uuid.UUID) (*UserData, error) {
+func (service *userService) GetById(ctx context.Context, id uuid.UUID) (*UserData, error) {
 	queries, release, err := service.pool.Acquire(ctx)
 	if err != nil {
 		return nil, err
@@ -72,7 +79,7 @@ func (service *UserService) GetById(ctx context.Context, id uuid.UUID) (*UserDat
 	return data, nil
 }
 
-func (service *UserService) GetByEmail(ctx context.Context, email string) (*UserData, error) {
+func (service *userService) GetByEmail(ctx context.Context, email string) (*UserData, error) {
 	queries, release, err := service.pool.Acquire(ctx)
 	if err != nil {
 		return nil, err
@@ -96,7 +103,7 @@ func (service *UserService) GetByEmail(ctx context.Context, email string) (*User
 	return data, nil
 }
 
-func (service *UserService) GetByEmailAndPassword(ctx context.Context, email string, password string) (*UserData, error) {
+func (service *userService) GetByEmailAndPassword(ctx context.Context, email string, password string) (*UserData, error) {
 	queries, release, err := service.pool.Acquire(ctx)
 	if err != nil {
 		return nil, err
@@ -114,7 +121,6 @@ func (service *UserService) GetByEmailAndPassword(ctx context.Context, email str
 
 	matched, err := crypto.VerifyPassword(password, user.Password.String)
 	if err != nil {
-		return nil, err
 	}
 	if !matched {
 		return nil, ErrIncorrectUsernamePassword
