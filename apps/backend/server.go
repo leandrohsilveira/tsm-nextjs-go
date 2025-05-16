@@ -7,36 +7,30 @@ import (
 	"tsm/domain/auth"
 	"tsm/setup"
 
-	"github.com/labstack/echo/v4"
+	"github.com/gofiber/fiber/v2"
+	"github.com/gofiber/fiber/v2/log"
 )
 
 func main() {
-	app := echo.New()
+	app := fiber.New()
 
 	setup.SetupLogger(app)
-	setup.SetupValidator(app)
 
-	pool, err := domain.NewDatabasePool(context.Background(), app.Logger)
+	pool, err := domain.NewDatabasePool(context.Background())
 
 	if err != nil {
-		app.Logger.Fatal(err)
+		log.Fatal(err)
 	}
 
 	defer pool.Close()
 
-	if err = Seed(context.Background(), app.Logger, pool); err != nil {
-		app.Logger.Fatal(err)
+	if err = Seed(context.Background(), pool); err != nil {
+		log.Fatal(err)
 	}
 
-	setupRoutes := setup.Routes(
-		auth.Routes("/auth", pool),
-	)
+	app.Mount("/auth", auth.Routes(pool)).Name("Authentication routes")
 
-	if err := setupRoutes(app); err != nil {
-		app.Logger.Fatal(err)
-	}
-
-	if err := app.Start(":4000"); err != nil && err != http.ErrServerClosed {
-		app.Logger.Fatal(err)
+	if err := app.Listen(":4000"); err != nil && err != http.ErrServerClosed {
+		log.Fatal(err)
 	}
 }

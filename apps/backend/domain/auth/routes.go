@@ -4,73 +4,67 @@ import (
 	"net/http"
 	"tsm/domain"
 	"tsm/domain/user"
-	"tsm/setup"
 
-	"github.com/google/uuid"
-	"github.com/labstack/echo/v4"
+	"github.com/gofiber/fiber/v2"
 )
 
 type AuthRoutes struct {
 	pool domain.DatabasePool
 }
 
-func Routes(path string, pool domain.DatabasePool) setup.SetupRoutesResult {
+func Routes(pool domain.DatabasePool) *fiber.App {
+	app := fiber.New()
 
 	routes := AuthRoutes{pool}
 
-	return setup.SetupRoutes(
-		func(e *echo.Echo) {
-			e.POST(path, routes.login)
-			e.GET(path, routes.info)
-		},
-	)
+	app.Post("/", routes.login).Name("Login route")
+	app.Get("/", routes.info).Name("Current user info route")
+
+	return app
 }
 
-func (routes *AuthRoutes) login(c echo.Context) error {
+func (routes *AuthRoutes) login(c *fiber.Ctx) error {
 	payload := new(LoginPayload)
 
-	if err := c.Bind(payload); err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+	if err := c.BodyParser(payload); err != nil {
+		return domain.NewHttpError(http.StatusBadRequest, err)
 	}
 
-	if err := c.Validate(payload); err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+	result := domain.Validate(payload)
+
+	if result.Validated && result.Err != nil {
+		return c.Status(http.StatusBadRequest).JSON(result)
+	}
+
+	if result.Err != nil {
+		return domain.NewHttpError(http.StatusBadRequest, result.Err)
 	}
 
 	service := NewService(user.NewService(routes.pool))
 
-	data, err := service.Login(c.Request().Context(), *payload)
+	data, err := service.Login(c.UserContext(), *payload)
 
 	if err == user.ErrIncorrectUsernamePassword {
-		return echo.NewHTTPError(http.StatusForbidden, err)
+		return domain.NewHttpError(http.StatusForbidden, err)
 	}
 
 	if err != nil {
 		return err
 	}
 
-	return c.JSON(http.StatusOK, data)
+	return c.Status(http.StatusOK).JSON(data)
 }
 
-func (routes *AuthRoutes) info(c echo.Context) error {
-	authorization := c.Request().Header.Get("authorization")
-	if authorization == "" {
-		return echo.ErrUnauthorized
-	}
+func (routes *AuthRoutes) info(c *fiber.Ctx) error {
+	service := NewService(user.NewService(routes.pool))
 
-	// TODO: validate and decode bearer token instead of inferring it as user id
-	userId, err := uuid.Parse(authorization)
-	if err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, err)
-	}
-
-	service := user.NewService(routes.pool)
-
-	data, err := service.GetById(c.Request().Context(), userId)
-
+	data, err := service.GetCurrentUser(c.UserContext(), "")
 	if err != nil {
 		return err
 	}
+	if data == nil {
+		return domain.ErrUnauthorized
+	}
 
-	return c.JSON(http.StatusOK, LoginInfo{Data: *data})
+	return c.JSON(LoginInfo{Data: *data})
 }

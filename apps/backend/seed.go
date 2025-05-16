@@ -7,17 +7,17 @@ import (
 	"tsm/domain"
 	"tsm/domain/user"
 
-	"github.com/labstack/echo/v4"
+	"github.com/gofiber/fiber/v2/log"
 )
 
-func Seed(ctx context.Context, logger echo.Logger, pool domain.DatabasePool) error {
+func Seed(ctx context.Context, pool domain.DatabasePool) error {
 	activate := ShouldSeed()
 
 	if !activate {
 		return nil
 	}
 
-	logger.Infof("Seeding database...")
+	log.Info("Seeding database...")
 
 	username, isUsernameSet := os.LookupEnv("ADMIN_USERNAME")
 	if !isUsernameSet {
@@ -38,7 +38,7 @@ func Seed(ctx context.Context, logger echo.Logger, pool domain.DatabasePool) err
 	}
 
 	if data != nil {
-		logger.Infof("Admin user %s already exists (ID %s), seed will be aborted", username, data.ID)
+		log.Infof("Admin user %s already exists (ID %s), seed will be aborted", username, data.ID)
 		return nil
 	}
 
@@ -50,7 +50,7 @@ func Seed(ctx context.Context, logger echo.Logger, pool domain.DatabasePool) err
 	})
 
 	if err == nil {
-		logger.Infof("Admin user %s created with ID: %s", username, data.ID)
+		log.Infof("Admin user %s created with ID: %s", username, data.ID)
 	}
 
 	return err

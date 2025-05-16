@@ -5,10 +5,10 @@ import (
 	"os"
 	"tsm/database"
 
+	"github.com/gofiber/fiber/v2/log"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgtype"
 	"github.com/jackc/pgx/v5/pgxpool"
-	"github.com/labstack/echo/v4"
 )
 
 type DatabasePool interface {
@@ -19,13 +19,12 @@ type DatabasePool interface {
 }
 
 type databasePool struct {
-	pool   *pgxpool.Pool
-	logger echo.Logger
+	pool *pgxpool.Pool
 }
 
 var ErrNoRows = pgx.ErrNoRows
 
-func NewDatabasePool(ctx context.Context, logger echo.Logger) (DatabasePool, error) {
+func NewDatabasePool(ctx context.Context) (DatabasePool, error) {
 	connString, isSet := os.LookupEnv("DATABASE_URL")
 	if !isSet {
 		connString = "postgres://app:password@localhost:5432/app?sslmode=disable"
@@ -41,9 +40,9 @@ func NewDatabasePool(ctx context.Context, logger echo.Logger) (DatabasePool, err
 		return nil, err
 	}
 
-	logger.Infof("Database connected %s:%d", config.ConnConfig.Host, config.ConnConfig.Port)
+	log.Infof("Database connected %s:%d", config.ConnConfig.Host, config.ConnConfig.Port)
 
-	return &databasePool{pool, logger}, nil
+	return &databasePool{pool}, nil
 }
 
 func (db *databasePool) Text(text string) pgtype.Text {
@@ -71,5 +70,5 @@ func (db *databasePool) WithQueries(ctx context.Context, fn func(*database.Queri
 
 func (db *databasePool) Close() {
 	db.pool.Close()
-	db.logger.Infof("Database disconnected")
+	log.Infof("Database disconnected")
 }

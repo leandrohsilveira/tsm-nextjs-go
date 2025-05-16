@@ -2,16 +2,14 @@ package auth
 
 import (
 	"context"
-	"net/http"
 	"tsm/domain/user"
 
 	"github.com/google/uuid"
-	"github.com/labstack/echo/v4"
 )
 
 type AuthService interface {
 	Login(context.Context, LoginPayload) (*LoginResult, error)
-	GetCurrentUser(http.Request) (*user.UserData, error)
+	GetCurrentUser(context.Context, string) (*user.UserData, error)
 }
 
 type authService struct {
@@ -32,18 +30,16 @@ func (service *authService) Login(ctx context.Context, payload LoginPayload) (*L
 	return &LoginResult{Token: data.ID, RefreshToken: ""}, nil
 }
 
-func (service *authService) GetCurrentUser(req http.Request) (*user.UserData, error) {
-	authorization := req.Header.Get("authorization")
-
+func (service *authService) GetCurrentUser(ctx context.Context, authorization string) (*user.UserData, error) {
 	if authorization == "" {
-		return nil, echo.ErrUnauthorized
+		return nil, nil
 	}
 
 	// TODO: validate and decode the auth token to get the user id from the payload
 	userId, err := uuid.Parse(authorization)
 	if err != nil {
-		return nil, echo.NewHTTPError(http.StatusBadRequest, err)
+		return nil, err
 	}
 
-	return service.user.GetById(req.Context(), userId)
+	return service.user.GetById(ctx, userId)
 }
