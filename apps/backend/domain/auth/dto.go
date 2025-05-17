@@ -15,3 +15,7 @@ type LoginResult struct {
 type LoginInfo struct {
 	Data user.UserData `json:"data"`
 }
+
+type LoginInfoPayload struct {
+	Token string `reqHeader:"authorization" validate:"required"`
+}

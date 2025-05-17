@@ -9,7 +9,7 @@ import (
 
 type AuthService interface {
 	Login(context.Context, LoginPayload) (*LoginResult, error)
-	GetCurrentUser(context.Context, string) (*user.UserData, error)
+	GetCurrentUser(context.Context, LoginInfoPayload) (*user.UserData, error)
 }
 
 type authService struct {
@@ -30,7 +30,9 @@ func (service *authService) Login(ctx context.Context, payload LoginPayload) (*L
 	return &LoginResult{Token: data.ID, RefreshToken: ""}, nil
 }
 
-func (service *authService) GetCurrentUser(ctx context.Context, authorization string) (*user.UserData, error) {
+func (service *authService) GetCurrentUser(ctx context.Context, payload LoginInfoPayload) (*user.UserData, error) {
+	authorization := payload.Token
+
 	if authorization == "" {
 		return nil, nil
 	}
@@ -41,5 +43,10 @@ func (service *authService) GetCurrentUser(ctx context.Context, authorization st
 		return nil, err
 	}
 
-	return service.user.GetById(ctx, userId)
+	data, err := service.user.GetById(ctx, userId)
+	if err != nil {
+		return nil, err
+	}
+
+	return data, nil
 }

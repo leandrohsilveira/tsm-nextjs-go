@@ -52,13 +52,26 @@ func (routes *AuthRoutes) login(c *fiber.Ctx) error {
 		return err
 	}
 
-	return c.Status(http.StatusOK).JSON(data)
+	return c.JSON(data)
 }
 
 func (routes *AuthRoutes) info(c *fiber.Ctx) error {
+	payload := new(LoginInfoPayload)
+	if err := c.ReqHeaderParser(payload); err != nil {
+		return err
+	}
+
+	result := domain.Validate(payload)
+	if result.Err != nil && result.Validated {
+		return domain.ErrUnauthorized
+	}
+	if result.Err != nil {
+		return result.Err
+	}
+
 	service := NewService(user.NewService(routes.pool))
 
-	data, err := service.GetCurrentUser(c.UserContext(), "")
+	data, err := service.GetCurrentUser(c.UserContext(), *payload)
 	if err != nil {
 		return err
 	}
