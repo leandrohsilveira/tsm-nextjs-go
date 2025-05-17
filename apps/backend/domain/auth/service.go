@@ -2,6 +2,7 @@ package auth
 
 import (
 	"context"
+	"tsm/domain"
 	"tsm/domain/user"
 
 	"github.com/google/uuid"
@@ -34,10 +35,6 @@ func (service *authService) Login(ctx context.Context, payload LoginPayload) (*L
 func (service *authService) GetCurrentUser(ctx context.Context, payload LoginInfoPayload) (*user.UserData, error) {
 	authorization := payload.Token
 
-	if authorization == "" {
-		return nil, nil
-	}
-
 	// TODO: validate and decode the auth token to get the user id from the payload
 	userId, err := uuid.Parse(authorization)
 	if err != nil {
@@ -45,6 +42,9 @@ func (service *authService) GetCurrentUser(ctx context.Context, payload LoginInf
 	}
 
 	data, err := service.user.GetById(ctx, userId)
+	if err == domain.ErrNoRows {
+		return nil, nil
+	}
 	if err != nil {
 		return nil, err
 	}

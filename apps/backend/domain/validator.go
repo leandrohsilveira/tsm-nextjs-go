@@ -2,6 +2,7 @@ package domain
 
 import (
 	"github.com/go-playground/validator/v10"
+	"github.com/gofiber/fiber/v2"
 )
 
 type FieldError struct {
@@ -10,15 +11,28 @@ type FieldError struct {
 	Value any    `json:"value"`
 }
 
-type ValidationResult struct {
-	Validated bool
-	Err       error        `json:"message"`
-	Fields    []FieldError `json:"fields"`
+type ValidationData struct {
+	Message string       `json:"message"`
+	Fields  []FieldError `json:"fields"`
+}
+
+type ValidationError struct {
+	Code    int          `json:"code"`
+	Message string       `json:"message"`
+	Fields  []FieldError `json:"fields"`
 }
 
 var val = validator.New()
 
-func Validate(i any) ValidationResult {
+func NewValidationError(result *ValidationData) *ValidationError {
+	return &ValidationError{
+		Code:    fiber.StatusBadRequest,
+		Message: fiber.ErrBadRequest.Message,
+		Fields:  result.Fields,
+	}
+}
+
+func Validate(i any) (*ValidationData, error) {
 	err := val.Struct(i)
 
 	errs, ok := err.(validator.ValidationErrors)
@@ -34,16 +48,20 @@ func Validate(i any) ValidationResult {
 			})
 		}
 
-		return ValidationResult{
-			Err:       err,
-			Validated: true,
-			Fields:    fields,
+		data := &ValidationData{
+			Message: err.Error(),
+			Fields:  fields,
 		}
+		return data, nil
 	}
 
 	if err != nil {
 		// Optionally, you could return the error to give each route more control over the status code
-		return ValidationResult{Err: err, Validated: false}
+		return nil, err
 	}
-	return ValidationResult{Validated: true}
+	return nil, nil
+}
+
+func (err *ValidationError) Error() string {
+	return err.Message
 }

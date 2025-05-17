@@ -7,13 +7,13 @@ import (
 	"tsm/domain/auth"
 	"tsm/setup"
 
-	"github.com/gofiber/fiber/v2"
 	"github.com/rs/zerolog/log"
 )
 
 func main() {
-	app := fiber.New()
 	domain.SetupFlags()
+
+	app := setup.SetupApp()
 
 	setup.SetupLogger(app)
 

@@ -30,14 +30,14 @@ func (routes *AuthRoutes) login(c *fiber.Ctx) error {
 		return domain.NewHttpError(http.StatusBadRequest, err)
 	}
 
-	result := domain.Validate(payload)
+	result, err := domain.Validate(payload)
 
-	if result.Validated && result.Err != nil {
-		return c.Status(http.StatusBadRequest).JSON(result)
+	if err != nil {
+		return domain.NewHttpError(http.StatusBadRequest, err)
 	}
 
-	if result.Err != nil {
-		return domain.NewHttpError(http.StatusBadRequest, result.Err)
+	if result != nil {
+		return domain.NewValidationError(result)
 	}
 
 	service := NewService(user.NewService(routes.pool))
@@ -61,12 +61,12 @@ func (routes *AuthRoutes) info(c *fiber.Ctx) error {
 		return err
 	}
 
-	result := domain.Validate(payload)
-	if result.Err != nil && result.Validated {
-		return domain.ErrUnauthorized
+	result, err := domain.Validate(payload)
+	if err != nil {
+		return err
 	}
-	if result.Err != nil {
-		return result.Err
+	if result != nil {
+		return domain.ErrUnauthorized
 	}
 
 	service := NewService(user.NewService(routes.pool))
