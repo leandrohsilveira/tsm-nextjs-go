@@ -1,25 +1,35 @@
 package setup
 
 import (
+	"context"
+	"os"
+	"time"
+
+	"github.com/gofiber/contrib/fiberzerolog"
 	"github.com/gofiber/fiber/v2"
-	"github.com/gofiber/fiber/v2/log"
-	"github.com/gofiber/fiber/v2/middleware/logger"
 	"github.com/gofiber/fiber/v2/middleware/requestid"
+	"github.com/rs/zerolog"
+	"github.com/rs/zerolog/log"
 )
 
 func SetupLogger(app *fiber.App) {
+	logger := log.Output(zerolog.ConsoleWriter{
+		Out:         os.Stdout,
+		TimeFormat:  time.TimeOnly,
+		FieldsOrder: []string{"requestId"},
+	})
+	log.Logger = logger
 	app.Use(requestid.New())
-	app.Use(logger.New(logger.Config{
-		Format: "${time} [MIDDLEWARE] (${pid} - ${id}) " +
-			"- ${method} ${path} -> HTTP ${status} (${latency}) ${error}\n",
+	app.Use(fiberzerolog.New(fiberzerolog.Config{
+		Logger: &logger,
+		Fields: []string{"pid", "requestId", "method", "url", "status", "latency", "error"},
 	}))
-	log.SetLevel(log.LevelInfo)
-	// app.Use(middleware.RequestID())
-	// app.Use(middleware.LoggerWithConfig(middleware.LoggerConfig{
-	// 	Format: "${time_rfc3339_nano} [MIDDLEWARE] (${id}) " +
-	// 		"- ${method} ${uri} -> HTTP ${status} (${latency_human}) ${error}\n",
-	// }))
-
-	// app.Logger.SetHeader("${time_rfc3339_nano} [${level}] (${id}) ${short_file}:${line} =>")
-	// app.Logger.SetLevel(log.INFO)
+	app.Use(func(c *fiber.Ctx) error {
+		reqId := c.Locals(requestid.ConfigDefault.ContextKey).(string)
+		ctx := context.WithValue(c.UserContext(), "requestId", reqId)
+		reqLogger := logger.With().Str("requestId", reqId).Logger()
+		ctx = reqLogger.WithContext(ctx)
+		c.SetUserContext(ctx)
+		return c.Next()
+	})
 }

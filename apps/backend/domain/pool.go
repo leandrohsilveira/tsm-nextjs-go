@@ -5,10 +5,10 @@ import (
 	"os"
 	"tsm/database"
 
-	"github.com/gofiber/fiber/v2/log"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgtype"
 	"github.com/jackc/pgx/v5/pgxpool"
+	"github.com/rs/zerolog/log"
 )
 
 type DatabasePool interface {
@@ -40,7 +40,10 @@ func NewDatabasePool(ctx context.Context) (DatabasePool, error) {
 		return nil, err
 	}
 
-	log.Infof("Database connected %s:%d", config.ConnConfig.Host, config.ConnConfig.Port)
+	log.Info().
+		Str("host", config.ConnConfig.Host).
+		Uint16("port", config.ConnConfig.Port).
+		Msg("Database connected")
 
 	return &databasePool{pool}, nil
 }
@@ -70,5 +73,5 @@ func (db *databasePool) WithQueries(ctx context.Context, fn func(*database.Queri
 
 func (db *databasePool) Close() {
 	db.pool.Close()
-	log.Infof("Database disconnected")
+	log.Info().Msg("Database disconnected")
 }

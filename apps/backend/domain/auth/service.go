@@ -5,6 +5,7 @@ import (
 	"tsm/domain/user"
 
 	"github.com/google/uuid"
+	"github.com/rs/zerolog/log"
 )
 
 type AuthService interface {
@@ -47,6 +48,8 @@ func (service *authService) GetCurrentUser(ctx context.Context, payload LoginInf
 	if err != nil {
 		return nil, err
 	}
+
+	log.Ctx(ctx).Info().Str("email", data.Email).Str("ID", data.ID).Msg("Get current user info")
 
 	return data, nil
 }

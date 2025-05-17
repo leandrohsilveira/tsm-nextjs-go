@@ -7,7 +7,7 @@ import (
 	"tsm/domain"
 	"tsm/domain/user"
 
-	"github.com/gofiber/fiber/v2/log"
+	"github.com/rs/zerolog/log"
 )
 
 func Seed(ctx context.Context, pool domain.DatabasePool) error {
@@ -17,7 +17,7 @@ func Seed(ctx context.Context, pool domain.DatabasePool) error {
 		return nil
 	}
 
-	log.Info("Seeding database...")
+	log.Info().Msg("Seeding database")
 
 	username, isUsernameSet := os.LookupEnv("ADMIN_USERNAME")
 	if !isUsernameSet {
@@ -38,7 +38,11 @@ func Seed(ctx context.Context, pool domain.DatabasePool) error {
 	}
 
 	if data != nil {
-		log.Infof("Admin user %s already exists (ID %s), seed will be aborted", username, data.ID)
+		log.Info().
+			Str("email", username).
+			Str("ID", data.ID).
+			Msgf("Admin user already exists, admin user seed will be aborted")
+
 		return nil
 	}
 
@@ -50,7 +54,10 @@ func Seed(ctx context.Context, pool domain.DatabasePool) error {
 	})
 
 	if err == nil {
-		log.Infof("Admin user %s created with ID: %s", username, data.ID)
+		log.Info().
+			Str("email", username).
+			Str("ID", data.ID).
+			Msgf("Admin user created")
 	}
 
 	return err
