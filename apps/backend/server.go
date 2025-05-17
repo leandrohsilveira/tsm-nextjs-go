@@ -13,6 +13,7 @@ import (
 
 func main() {
 	app := fiber.New()
+	domain.SetupFlags()
 
 	setup.SetupLogger(app)
 

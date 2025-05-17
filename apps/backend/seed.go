@@ -11,9 +11,7 @@ import (
 )
 
 func Seed(ctx context.Context, pool domain.DatabasePool) error {
-	activate := ShouldSeed()
-
-	if !activate {
+	if !domain.ShouldSeed {
 		return nil
 	}
 
@@ -61,17 +59,4 @@ func Seed(ctx context.Context, pool domain.DatabasePool) error {
 	}
 
 	return err
-}
-
-func ShouldSeed() bool {
-	args := os.Args[1:]
-
-	activate := false
-	for _, arg := range args {
-		if arg == "--seed" {
-			activate = true
-		}
-	}
-
-	return activate
 }
